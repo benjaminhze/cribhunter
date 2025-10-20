@@ -61,7 +61,7 @@ const PropertyDetail: React.FC = () => {
     setCurrentImageIndex(prev => prev === 0 ? property.images.length - 1 : prev - 1);
   };
   return <div className={`container mx-auto px-4 py-8 ${theme === 'dark' ? 'text-white' : ''}`}>
-      <button onClick={() => navigate(-1)} className={`flex items-center ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'} mb-6 hover:text-blue-800`}>
+      <button onClick={() => navigate('/')} className={`flex items-center ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'} mb-6 hover:text-blue-800`}>
         <ArrowLeftIcon className="h-5 w-5 mr-1" />
         Back to listings
       </button>
