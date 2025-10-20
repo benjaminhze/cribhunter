@@ -1,0 +1,152 @@
+import React, { useEffect, useState, createContext, useContext } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase configuration
+const supabaseUrl = 'https://fqjuaftiullmryhpnvgt.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxanVhZnRpdWxsbXJ5aHBudmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4OTIxMDksImV4cCI6MjA3NjQ2ODEwOX0.I2BELQBxwhb6-6PS_580t0uInmRmPE7BkP5aSvE56X4';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  userType: 'hunter' | 'agent';
+  phone?: string;
+}
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string, userType: 'hunter' | 'agent', phone?: string) => Promise<boolean>;
+  logout: () => void;
+}
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+export const AuthProvider: React.FC<{
+  children: React.ReactNode;
+}> = ({
+  children
+}) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  useEffect(() => {
+    // Check if user is logged in from localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
+    }
+  }, []);
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      // Hash password the same way as signup (base64 encoding for demo)
+      const passwordHash = btoa(password);
+
+      // Query user from Supabase
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .eq('password_hash', passwordHash)
+        .limit(1);
+
+      if (error) {
+        console.error('Login error:', error);
+        return false;
+      }
+
+      if (!users || users.length === 0) {
+        return false;
+      }
+
+      const userData = users[0];
+      
+      const authenticatedUser: User = {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        userType: userData.user_type,
+        phone: userData.phone
+      };
+
+      setUser(authenticatedUser);
+      setIsAuthenticated(true);
+      localStorage.setItem('user', JSON.stringify(authenticatedUser));
+      return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    }
+  };
+  const signup = async (name: string, email: string, password: string, userType: 'hunter' | 'agent' = 'hunter', phone?: string, agentLicense?: string): Promise<boolean> => {
+    try {
+      // Simple password hashing (in production, this should be done on the backend)
+      const passwordHash = btoa(password); // Simple base64 encoding for demo
+
+      // Prepare user data for Supabase
+      const userData = {
+        name,
+        email,
+        password_hash: passwordHash,
+        user_type: userType,
+        ...(userType === 'agent' && phone && { phone }),
+        ...(userType === 'agent' && agentLicense && { agent_license: agentLicense })
+      };
+
+      // Insert user directly into Supabase
+      const { data, error } = await supabase
+        .from('users')
+        .insert([userData])
+        .select();
+
+      if (error) {
+        console.error('Signup error:', error);
+        return false;
+      }
+
+      if (data && data.length > 0) {
+        const newUser = data[0];
+        
+        // Auto login after signup
+        const authenticatedUser: User = {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          userType: newUser.user_type,
+          phone: newUser.phone
+        };
+
+        setUser(authenticatedUser);
+        setIsAuthenticated(true);
+        localStorage.setItem('user', JSON.stringify(authenticatedUser));
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Signup error:', error);
+      return false;
+    }
+  };
+  const logout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('user');
+    localStorage.removeItem('access_token');
+  };
+  return <AuthContext.Provider value={{
+    user,
+    isAuthenticated,
+    login,
+    signup,
+    logout
+  }}>
+      {children}
+    </AuthContext.Provider>;
+};

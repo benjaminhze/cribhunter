@@ -1,0 +1,27 @@
+/* PLEASE NOTE: THESE TAILWIND IMPORTS SHOULD NEVER BE DELETED */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+/* DO NOT DELETE THESE TAILWIND IMPORTS, OTHERWISE THE STYLING WILL NOT RENDER AT ALL */
+
+/* Base styles for light and dark mode */
+html {
+  @apply transition-colors duration-200;
+}
+
+html.light {
+  @apply bg-gray-50 text-gray-900;
+}
+
+html.dark {
+  @apply bg-gray-900 text-white;
+}
+
+body {
+  @apply min-h-screen transition-colors duration-200;
+}
+
+/* Ensure smooth transitions for all elements */
+* {
+  @apply transition-colors duration-200;
+}
