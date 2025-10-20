@@ -17,6 +17,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (
     name: string,
@@ -44,13 +45,16 @@ export const AuthProvider: React.FC<{
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem('user');
+    // Check if user is logged in from sessionStorage (persists during browser session only)
+    const storedUser = sessionStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
       setIsAuthenticated(true);
     }
+    setIsLoading(false);
   }, []);
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -87,7 +91,7 @@ export const AuthProvider: React.FC<{
 
       setUser(authenticatedUser);
       setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(authenticatedUser));
+      sessionStorage.setItem('user', JSON.stringify(authenticatedUser));
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -169,7 +173,7 @@ export const AuthProvider: React.FC<{
 
         setUser(authenticatedUser);
         setIsAuthenticated(true);
-        localStorage.setItem('user', JSON.stringify(authenticatedUser));
+        sessionStorage.setItem('user', JSON.stringify(authenticatedUser));
         return true;
       }
 
@@ -182,12 +186,12 @@ export const AuthProvider: React.FC<{
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('user');
-    localStorage.removeItem('access_token');
+    sessionStorage.removeItem('user');
   };
   return <AuthContext.Provider value={{
     user,
     isAuthenticated,
+    isLoading,
     login,
     signup,
     checkAgentRegistrationExists,

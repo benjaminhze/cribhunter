@@ -12,6 +12,8 @@ import Header from './components/Header';
 // Protected route component
 const ProtectedRoute = ({
   children
+}: {
+  children: React.ReactNode;
 }) => {
   const {
     isAuthenticated
@@ -24,6 +26,8 @@ const ProtectedRoute = ({
 // Agent only route component
 const AgentRoute = ({
   children
+}: {
+  children: React.ReactNode;
 }) => {
   const {
     isAuthenticated,
@@ -33,19 +37,30 @@ const AgentRoute = ({
     return <Navigate to="/auth" replace />;
   }
   if (user?.userType !== 'agent') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/home" replace />;
   }
   return children;
 };
 export function AppRouter() {
   const {
-    isAuthenticated
+    isAuthenticated,
+    isLoading
   } = useAuth();
+  
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
   return <BrowserRouter>
       {isAuthenticated && <Header />}
       <Routes>
-        <Route path="/auth" element={isAuthenticated ? <Navigate to="/" replace /> : <Auth />} />
-        <Route path="/" element={<ProtectedRoute>
+        <Route path="/auth" element={isAuthenticated ? <Navigate to="/home" replace /> : <Auth />} />
+        <Route path="/" element={<Navigate to="/auth" replace />} />
+        <Route path="/home" element={<ProtectedRoute>
               <Home />
             </ProtectedRoute>} />
         <Route path="/favourites" element={<ProtectedRoute>
