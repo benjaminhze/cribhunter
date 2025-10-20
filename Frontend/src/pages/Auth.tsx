@@ -164,7 +164,7 @@ const Auth: React.FC = () => {
                   <label htmlFor="name" className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     Full Name
                   </label>
-                  <input id="name" name="name" type="text" required pattern="^[A-Za-z][A-Za-z\s'-]*$" className={`mt-1 block w-full px-3 py-2 border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`} placeholder="John Doe" value={name} onChange={e => setName(e.target.value.replace(/\d/g, ''))} />
+                  <input id="name" name="name" type="text" required pattern="^[A-Za-z][A-Za-z\s'-]*$" className={`mt-1 block w-full px-3 py-2 border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`} placeholder="e.g. John Doe" value={name} onChange={e => setName(e.target.value.replace(/\d/g, ''))} />
                   <p className={`mt-1 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Letters, spaces, apostrophes, and hyphens only.</p>
                 </div>
                 <div>
@@ -191,10 +191,6 @@ const Auth: React.FC = () => {
                       Agent License Number
                     </label>
                     <input id="agentLicense" name="agentLicense" type="text" required className={`mt-1 block w-full px-3 py-2 border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`} placeholder="e.g. AG123456" value={agentLicense} onChange={e => setAgentLicense(e.target.value)} />
-                    <p className={`mt-1 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      For demo purposes, enter a license number starting with
-                      "AG"
-                    </p>
                   </div>}
                 {userType === 'agent' && <div>
                     <label htmlFor="phone" className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -204,9 +200,6 @@ const Auth: React.FC = () => {
                       const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 8);
                       setPhone(digitsOnly);
                     }} />
-                    <p className={`mt-1 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Must be exactly 8 digits.
-                    </p>
                   </div>}
               </>}
             <div>

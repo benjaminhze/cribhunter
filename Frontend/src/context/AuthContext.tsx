@@ -17,7 +17,14 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string, userType: 'hunter' | 'agent', phone?: string) => Promise<boolean>;
+  signup: (
+    name: string,
+    email: string,
+    password: string,
+    userType: 'hunter' | 'agent',
+    phone?: string,
+    agentLicense?: string
+  ) => Promise<boolean>;
   logout: () => void;
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
