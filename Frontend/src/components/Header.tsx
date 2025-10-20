@@ -17,7 +17,7 @@ const Header = () => {
     logout();
     navigate('/auth');
   };
-  return <header className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} shadow-md py-4 px-6 sticky top-0 z-50`}>
+  return <header className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} shadow-md py-4 px-6 sticky top-0 z-[9999]`}>
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold flex items-center">
           <span className="text-blue-600">Crib</span>
