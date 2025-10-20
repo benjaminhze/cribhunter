@@ -9,11 +9,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
-
-from models import User, Property, UserCreate, UserLogin, PropertyCreate, PropertyUpdate
-from database import get_supabase_client
-from auth import create_access_token, verify_token, get_password_hash, verify_password
 from routes import auth_router, properties_router, users_router
+from database import get_supabase_client
 
 # Load environment variables
 load_dotenv()
