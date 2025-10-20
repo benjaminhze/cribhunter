@@ -19,7 +19,8 @@ const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const {
     login,
-    signup
+    signup,
+    checkAgentRegistrationExists
   } = useAuth();
   const {
     theme
@@ -33,6 +34,7 @@ const Auth: React.FC = () => {
       if (isLogin) {
         const success = await login(email, password);
         if (success) {
+          clearFormFields();
           navigate('/');
         } else {
           setError('Invalid email or password');
@@ -74,9 +76,18 @@ const Auth: React.FC = () => {
             setLoading(false);
             return;
           }
+
+          // Check duplicate registration number before calling signup
+          const exists = await checkAgentRegistrationExists(agentLicense);
+          if (exists) {
+            setError('Agent registration number already in use');
+            setLoading(false);
+            return;
+          }
         }
         const success = await signup(name, email, password, userType, userType === 'agent' ? phone : undefined, userType === 'agent' ? agentLicense : undefined);
         if (success) {
+          clearFormFields();
           navigate('/');
         } else {
           setError('Email already in use');
@@ -87,13 +98,30 @@ const Auth: React.FC = () => {
     }
     setLoading(false);
   };
-  // Mock function to verify agent license
-  // In a real app, this would make an API call to a property agent database
+  // Validate against data.gov.sg CEA Salesperson Information dataset
+  // Field used: registration_no (switch from estate_agent_license_no)
   const verifyAgentLicense = async (license: string): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    // For demo purposes, consider any license number that starts with "AG" as valid
-    return license.trim().toUpperCase().startsWith('AG');
+    const normalized = license.trim().toUpperCase();
+    if (!/^[A-Z0-9]+$/.test(normalized)) return false;
+
+    try {
+      const filters = encodeURIComponent(JSON.stringify({
+        registration_no: normalized
+      }));
+      const url = `https://data.gov.sg/api/action/datastore_search?resource_id=d_07c63be0f37e6e59c07a4ddc2fd87fcb&filters=${filters}&limit=1`;
+
+      const res = await fetch(url);
+      if (!res.ok) return false;
+
+      const data = await res.json();
+      const records = data?.result?.records ?? [];
+      return (
+        records.length > 0 &&
+        String(records[0]?.registration_no || '').toUpperCase() === normalized
+      );
+    } catch {
+      return false; // treat network/API errors as invalid
+    }
   };
   const handleGoogleSignIn = async () => {
     setError('');
@@ -125,9 +153,23 @@ const Auth: React.FC = () => {
     }
     setLoading(false);
   };
+  const clearFormFields = () => {
+    setName('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setAgentLicense('');
+    setPhone('');
+  };
   const toggleMode = () => {
-    setIsLogin(!isLogin);
+    const nextIsLogin = !isLogin;
+    setIsLogin(nextIsLogin);
     setError('');
+    clearFormFields();
+    if (!nextIsLogin) {
+      // entering Sign up → default to property hunter
+      setUserType('hunter');
+    }
   };
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -188,9 +230,9 @@ const Auth: React.FC = () => {
                 </div>
                 {userType === 'agent' && <div>
                     <label htmlFor="agentLicense" className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Agent License Number
+                      Agent Registration Number
                     </label>
-                    <input id="agentLicense" name="agentLicense" type="text" required className={`mt-1 block w-full px-3 py-2 border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`} placeholder="e.g. AG123456" value={agentLicense} onChange={e => setAgentLicense(e.target.value)} />
+                    <input id="agentLicense" name="agentLicense" type="text" required className={`mt-1 block w-full px-3 py-2 border ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`} placeholder="e.g. R012345A" value={agentLicense} onChange={e => setAgentLicense(e.target.value)} />
                   </div>}
                 {userType === 'agent' && <div>
                     <label htmlFor="phone" className={`block text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>

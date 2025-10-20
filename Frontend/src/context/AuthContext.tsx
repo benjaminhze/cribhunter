@@ -12,6 +12,7 @@ interface User {
   email: string;
   userType: 'hunter' | 'agent';
   phone?: string;
+  agentLicense?: string;
 }
 interface AuthContextType {
   user: User | null;
@@ -25,6 +26,7 @@ interface AuthContextType {
     phone?: string,
     agentLicense?: string
   ) => Promise<boolean>;
+  checkAgentRegistrationExists: (registrationNo: string) => Promise<boolean>;
   logout: () => void;
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,7 +81,8 @@ export const AuthProvider: React.FC<{
         name: userData.name,
         email: userData.email,
         userType: userData.user_type,
-        phone: userData.phone
+        phone: userData.phone,
+        agentLicense: userData.agent_license
       };
 
       setUser(authenticatedUser);
@@ -91,19 +94,53 @@ export const AuthProvider: React.FC<{
       return false;
     }
   };
+
+  const checkAgentRegistrationExists = async (registrationNo: string): Promise<boolean> => {
+    const normalized = registrationNo.trim().toUpperCase();
+    if (!normalized) return false;
+    const { data, error } = await supabase
+      .from('users')
+      .select('id')
+      .eq('agent_license', normalized)
+      .limit(1);
+    if (error) {
+      console.error('Check agent registration error:', error);
+      return false;
+    }
+    return !!(data && data.length > 0);
+  };
   const signup = async (name: string, email: string, password: string, userType: 'hunter' | 'agent' = 'hunter', phone?: string, agentLicense?: string): Promise<boolean> => {
     try {
       // Simple password hashing (in production, this should be done on the backend)
       const passwordHash = btoa(password); // Simple base64 encoding for demo
 
       // Prepare user data for Supabase
+      const normalizedAgentLicense = agentLicense ? agentLicense.trim().toUpperCase() : undefined;
+
+      // Enforce unique agent license if provided
+      if (userType === 'agent' && normalizedAgentLicense) {
+        const { data: existing, error: existingErr } = await supabase
+          .from('users')
+          .select('id')
+          .eq('agent_license', normalizedAgentLicense)
+          .limit(1);
+        if (existingErr) {
+          console.error('Signup check error:', existingErr);
+          return false;
+        }
+        if (existing && existing.length > 0) {
+          // License already used
+          return false;
+        }
+      }
+
       const userData = {
         name,
         email,
         password_hash: passwordHash,
         user_type: userType,
         ...(userType === 'agent' && phone && { phone }),
-        ...(userType === 'agent' && agentLicense && { agent_license: agentLicense })
+        ...(userType === 'agent' && normalizedAgentLicense && { agent_license: normalizedAgentLicense })
       };
 
       // Insert user directly into Supabase
@@ -126,7 +163,8 @@ export const AuthProvider: React.FC<{
           name: newUser.name,
           email: newUser.email,
           userType: newUser.user_type,
-          phone: newUser.phone
+          phone: newUser.phone,
+          agentLicense: newUser.agent_license
         };
 
         setUser(authenticatedUser);
@@ -152,6 +190,7 @@ export const AuthProvider: React.FC<{
     isAuthenticated,
     login,
     signup,
+    checkAgentRegistrationExists,
     logout
   }}>
       {children}

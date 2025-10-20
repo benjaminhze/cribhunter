@@ -38,6 +38,12 @@ const Profile: React.FC = () => {
               <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
                 {user.email}
               </p>
+              {user.userType === 'agent' && (
+                <div className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {user.phone && <p>Phone: {user.phone}</p>}
+                  {user.agentLicense && <p>License: {user.agentLicense}</p>}
+                </div>
+              )}
               <p className={`mt-1 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>
                 {user.userType === 'hunter' ? 'Property Hunter' : 'Real Estate Agent'}
               </p>
