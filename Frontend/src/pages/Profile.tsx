@@ -40,8 +40,10 @@ const Profile: React.FC = () => {
               </p>
               {user.userType === 'agent' && (
                 <div className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {user.phone && <p>Phone: {user.phone}</p>}
-                  {user.agentLicense && <p>License: {user.agentLicense}</p>}
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 items-baseline">
+                    {user.phone && <p>Phone Number: {user.phone}</p>}
+                    {user.agentLicense && <p>Registration Number: {user.agentLicense}</p>}
+                  </div>
                 </div>
               )}
               <p className={`mt-1 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>
